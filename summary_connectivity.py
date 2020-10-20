@@ -54,8 +54,10 @@ def main():
 
     # Argument parser
     parser = argparse.ArgumentParser(
-        description="Computes the Pearson correlation coefficient within a given number of networks/ROIs within a CIFTI dscalar or dlabel file. \
-                    Additionally, should more than one network be provided, then the Pearson correlation is computed between them as well.")
+        description="Computes the mean of the Pearson correlation coefficient within a given number of networks/ROIs within a CIFTI dscalar or dlabel file. \
+                    Additionally, should more than one network be provided, then the Pearson correlation is computed between them as well. \
+                    Arguments labeled as `Repeatable` can be used more than once, however, additional repeatable arguments must have the \
+                    same number of corresponding arguments.")
 
     # Parse Arguments
     # Required Arguments
@@ -78,7 +80,7 @@ def main():
                             metavar="RIGHT.gii",
                             required=True,
                             help="Right GIFTI surface (preferably midthickness file).")
-     reqoptions.add_argument('-n', '--network',
+    reqoptions.add_argument('-n', '--network',
                             type=str,
                             dest="label",
                             metavar="CIFTI.dscalar.nii",
@@ -86,10 +88,10 @@ def main():
                             action='append',
                             # nargs='+',
                             help="Input dscalar or dlabel files [Repeatable].")
-     reqoptions.add_argument('-o', '-out', '--output-prefix',
+    reqoptions.add_argument('-o', '-out', '--output-prefix',
                             type=str,
                             dest="out_prefix",
-                            metavar="CIFTI.dscalar.nii",
+                            metavar="<prefix>",
                             required=True,
                             action='append',
                             # nargs='+',
