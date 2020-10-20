@@ -1,0 +1,11 @@
+-border-file-concatenate     MERGE BORDER FILES
+-cifti-concatenate           MERGE MAPS OF CIFTI FILES
+-cifti-demean                DEMEAN/NORMALIZE AND CONCATENATE
+-cifti-dlabel-split-cortex   SEPARATE SURFACE LABELS INTO LEFT/RIGHT
+-command-help-search         SEARCH WB_COMMAND HELP
+-freesurfer-resample-prep    CREATE MIDTHICKNESSES FROM FREESURFER
+-import-probtrack-roi        CONVERT ROI TRACKS TO CIFTI
+-label-concatenate           MERGE MAPS OF LABEL FILES
+-metric-concatenate          MERGE MAPS OF METRIC FILES
+-scene-file-concatenate      MERGE SCENES OF SCENE FILES
+-volume-concatenate          MERGE MAPS OF VOLUME FILES
