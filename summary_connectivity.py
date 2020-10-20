@@ -108,7 +108,7 @@ def main():
                             help="Surface cluster threshold. [default: 1]")
     optoptions.add_argument('-m', '--min-size',
                             type=float,
-                            dest="min_sizen",
+                            dest="min_size",
                             metavar="INT",
                             default=20,
                             required=False,
@@ -573,8 +573,11 @@ def corr_comp_multi_roi(cii,
     
     # Ascertain absolute file paths
     cii = os.path.abspath(cii)
-    labels = [ os.path.abspath(label) for label in labels ]
+    left_surf = os.path.abspath(left_surf)
+    right_surf = os.path.abspath(right_surf)
     log_file = os.path.abspath(log_file)
+
+    labels = [ os.path.abspath(label) for label in labels ]
     
     out_dir = os.path.abspath(os.path.dirname(out_prefixes[0]))
     out_names = [ os.path.basename(out_prefix) for out_prefix in out_prefixes ]
@@ -606,7 +609,7 @@ def corr_comp_multi_roi(cii,
                 log_cmd="Processing: Input Subject NIFTI-2 data")
         
     nii_sub = cifti_to_nifti(cii=cii,
-                             out="sub_nii.ts.txt",
+                             out=os.path.join(tmp_dir,"sub_nii.ts"),
                              log_file=log_file,
                              debug=debug,
                              dryrun=dryrun,
