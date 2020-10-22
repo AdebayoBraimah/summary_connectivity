@@ -10,7 +10,11 @@ correlation (covariance) matrix (offset by -1 to remove the main diagonal).
 #
 # Numpy style guide:
 # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html#example-numpy
+# 
+# See these examples for function annotations:
+# https://stackoverflow.com/questions/36335149/function-annotations-in-python
 
+# Import packages/modules
 # Import packages/modules
 import subprocess
 import logging
@@ -20,6 +24,7 @@ import random
 import shutil
 import platform
 import sys
+from typing import Union
 
 # Import modules/packages argument parser
 import argparse
@@ -515,13 +520,83 @@ def write_arr(arr,out_file):
     '''
     
     try:
-        out_file = np.savetxt(out_file,arr,fmt="%.4f")
+        np.savetxt(out_file,arr,fmt="%.4f")
     except ValueError:
         with open(out_file,"w") as file:
             file.write(f"{arr:4f}\n")
             file.close()
             
     return out_file
+
+def compute_pearson_multi_network(ts_list: Union[list, np.ndarray]) -> float:
+    '''Computes summary connectivity value for two or more networks.
+    
+    Computes mean of Pearson correlation coefficient from two or more
+    sets of networks/ROIs.
+    
+    Explanation:
+        Assume matrices: A = N x M, B = N x P, and C = N x T.
+        Let n = sum(M,P,T), and let m = concatenate(A,B,C).
+        The Pearson correlation (covariance) matric can then be computed 
+        as r = pearson_correlation(m), in which r is a square, symmetric 
+        matrix of size N x N.
+        
+        Computing the summary connectivity is performed as follows: unique
+        portions of r are retained to compute the mean (excluding nan's). This
+        is done by creating a new matrix from indices computed from the 
+        components of n:
+        - 1st matrix: rows = 0...M-1 | columns = M+1...n
+        - 2nd matrix: rows = M+1...P | columns = P+1...n
+        - Nth matrix: rows = b+1...c | columns = c+1...n,
+        
+        where b, and c are the numbers of rows and columns, respectively.
+        
+    
+    Args:
+        ts_list: List of matrices (N x M, arrays) of the extracted timeseries
+            for each set of networks/ROIs.
+    
+    Returns:
+        Summary connectivity value (float), which is the mean of the Pearson 
+        correlation matrix that excludes redundant information (e.g. correlation)
+        coefficients between ROIs within the same network, and self-correlations
+        (which are always 1.0, and are in the main diagonal). 
+    '''
+    
+    # Concatenated matrices
+    ts_matrix = np.concatenate(ts_list,axis=1)
+    
+    # Compute Pearson correlation/Covariance matrix
+    a = np.corrcoef(ts_matrix,rowvar=False)
+    
+    # Init empyt lists
+    row_len = []
+    arr_vals = []
+    
+    # Record lengths M of input matrix of size N x M ()
+    for i in range(0,len(ts_list)-1,1):
+        _row = np.shape(ts_list[i])
+        _row_len = _row[1]
+        row_len.append(_row_len)
+    
+    # Retain unique parts/correlations made outside of 
+    # each networks ROIs
+    for idx in enumerate(row_len):
+        i = idx[0]
+        if i == 0:
+            row_num = 0
+        else:
+            row_num = row_len[i-1]
+        tmp_arr = a[row_num:row_len[i] + row_num, row_num + row_len[i] + 1:]
+        arr_vals.append(tmp_arr)
+    
+    # Flatten and concatenate matrices, computes nanmean
+    for idx in enumerate(arr_vals):
+        i = idx[0]
+        arr_vals[i] = np.ndarray.flatten(arr_vals[i])
+    flat_mat = np.concatenate(arr_vals,axis=0)
+    
+    return np.nanmean(flat_mat)
 
 def corr_comp_multi_roi(cii,
                         labels,
@@ -663,7 +738,7 @@ def corr_comp_multi_roi(cii,
                             shell=shell,
                             verbose=verbose)
         corr_mat = pearson_corr(file1=ts_cluster,log_file=log_file)
-        out = write_arr(arr=np.mean(corr_mat),out_file=out)
+        out = write_arr(arr=np.nanmean(corr_mat),out_file=out)
         
     if len(labels) > 1:
         
@@ -673,16 +748,22 @@ def corr_comp_multi_roi(cii,
                 log_cmd="Processing connectivity for all input labels")
             
         out = os.path.join(out_dir,"all_labels.mean_corr.txt")
+        ts_mat_file = os.path.join(tmp_dir,"ts_mat.tmp.txt")
         ts_list = []
         
         for idx in enumerate(labels):
+            i = idx[0]
             ts_cluster = f"out.tmp.{str(i)}.ts.txt"
             ts_mat = np.loadtxt(fname=ts_cluster)
             ts_list.append(ts_mat)
             
-        ts_matrix = np.concatenate(ts_list,axis=1)
-        corr_mat = pearson_corr(file1=ts_cluster,log_file=log_file)
-        out = write_arr(arr=np.mean(corr_mat),out_file=out)
+        # ts_matrix = np.concatenate(ts_list,axis=1)
+        # ts_mat_file = write_arr(arr=ts_matrix,out_file=ts_mat_file)
+        # corr_mat = pearson_corr(file1=ts_mat_file,log_file=log_file)
+        # out = write_arr(arr=np.nanmean(corr_mat),out_file=out)
+
+        corr_val = compute_pearson_multi_network(ts_list=ts_list)
+        out = write_arr(corr_val,out_file=out)
         
     # Clean-up
     os.chdir(cwd)
