@@ -545,8 +545,8 @@ def compute_pearson_multi_network(ts_list: Union[list, np.ndarray]) -> float:
         portions of r are retained to compute the mean (excluding nan's). This
         is done by creating a new matrix from indices computed from the 
         components of n:
-        - 1st matrix: rows = 0...M-1 | columns = M+1...n
-        - 2nd matrix: rows = M+1...P | columns = P+1...n
+        - 1st matrix: rows = 0...M-1 | columns = M+1...P
+        - 2nd matrix: rows = M+1...P | columns = P+1...c
         - Nth matrix: rows = b+1...c | columns = c+1...n,
         
         where b, and c are the numbers of rows and columns, respectively.
